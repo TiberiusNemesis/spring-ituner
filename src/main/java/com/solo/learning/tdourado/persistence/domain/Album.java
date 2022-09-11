@@ -18,21 +18,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Album {
-    // IDs
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long albumId;
+  // IDs
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long albumId;
 
-    private Integer artistId;
-    private Integer collectionId;
+  private Integer artistId;
+  private Integer collectionId;
 
-    // Names
-    private String artistName;
-    private String collectionName;
+  // Names
+  private String artistName;
+  private String collectionName;
 
-    // Additional information
-    private Double collectionPrice;
-    private String currency;
-    private String primaryGenreName;
-    private String copyright;
-    }
+  // Additional information
+  private Double collectionPrice;
+  private String currency;
+  private String primaryGenreName;
+  private String copyright;
+}

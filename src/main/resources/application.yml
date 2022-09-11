@@ -1,0 +1,6 @@
+---
+
+search:
+     url: https://itunes.apple.com/search?term=%s&entity=musicArtist&limit=5
+lookup:
+     url: https://itunes.apple.com/lookup?id=%s&entity=album

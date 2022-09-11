@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 public class SpringITunerApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(SpringITunerApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(SpringITunerApplication.class, args);
+  }
 }

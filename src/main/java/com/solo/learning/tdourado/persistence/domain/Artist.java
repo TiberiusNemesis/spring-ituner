@@ -17,10 +17,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class Artist {
-    @Id
-    @GeneratedValue
-    private Long artistUniqueId;
-    private Integer artistId;
-    private String artistName;
-    private String primaryGenreName;
+  @Id @GeneratedValue private Long artistUniqueId;
+  private Integer artistId;
+  private String artistName;
+  private String primaryGenreName;
 }
