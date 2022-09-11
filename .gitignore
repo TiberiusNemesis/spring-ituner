@@ -1,0 +1,15 @@
+dependency-reduced-pom.xml
+out
+target
+.idea
+pom.xml.bak
+*.class
+*.jar
+*.war
+*.zip
+*.tar.gz
+log.out
+*.iml
+mvnw
+mvnw.cmd
+.mvn
