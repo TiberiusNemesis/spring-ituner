@@ -308,6 +308,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
+                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                     <outputDirectory>${project.build.directory}</outputDirectory>
                     <reportOutputDirectory>${project.reporting.outputDirectory}</reportOutputDirectory>
                 </configuration>
