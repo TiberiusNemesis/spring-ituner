@@ -1,14 +1,11 @@
-name: quality-assurance
-on:
-  push:
-    paths:
-      -'**.java'
+name: basic-quality-assurance
+on: [push]
 permissions:
   contents: write
-
 jobs:
-  build:
-    steps:
+  build-and-deploy:
+    - runs-on: ubuntu-latest
+    - steps:
       - uses: actions/checkout@v3
 
       - name: JDK setup
