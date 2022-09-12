@@ -2,6 +2,7 @@ package com.solo.learning.tdourado.persistence.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 /**
@@ -26,6 +27,7 @@ public class Artist {
    * @param artistName The name of the Artist on the iTunes database.
    * @param primaryGenreName The primary genre of the artist (according to iTunes).
    */
+  @Generated
   public Artist(Integer artistId, String artistName, String primaryGenreName) {
     this.artistId = artistId;
     this.artistName = artistName;

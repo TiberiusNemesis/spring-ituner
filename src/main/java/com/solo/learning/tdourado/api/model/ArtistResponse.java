@@ -3,6 +3,7 @@ package com.solo.learning.tdourado.api.model;
 import com.solo.learning.tdourado.persistence.domain.Artist;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Generated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,6 +24,7 @@ public class ArtistResponse {
    * @param resultCount The number of results from the JSON response.
    * @param results A list of JSON Artist objects.
    */
+  @Generated
   public ArtistResponse(Integer resultCount, List<Artist> results) {
     this.resultCount = resultCount;
     this.results = new ArrayList<>(results);
@@ -33,6 +35,7 @@ public class ArtistResponse {
    *
    * @param results A list of JSON Artist objects.
    */
+  @Generated
   public void setResults(List<Artist> results) {
     this.results = new ArrayList<>(results);
   }
@@ -42,6 +45,7 @@ public class ArtistResponse {
    *
    * @return A list of JSON Artist objects.
    */
+  @Generated
   public List<Artist> getResults() {
     return new ArrayList<>(results);
   }
