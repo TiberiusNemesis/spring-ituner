@@ -1,0 +1,26 @@
+name: quality-assurance
+on:
+  push:
+    paths:
+      -'**.java'
+permissions:
+  contents: write
+
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: JDK setup
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'corretto'
+
+      - name: Build using Maven
+        run: mvn --batch-mode --update-snapshots install
+
+      - name: Deploy to Pages
+        uses: TiberiusNemesis/github-pages-deploy-action@v4
+        with:
+          folder: target
