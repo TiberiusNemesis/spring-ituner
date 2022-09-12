@@ -1,5 +1,19 @@
 ---
 
+spring:
+    jackson:
+        serialization:
+            INDENT_OUTPUT: true
+    jpa:
+        datasource:
+          driver-class-name: org.h2.Driver
+          url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+        hibernate:
+            ddl-auto: update
+    mvc:
+        pathmatch:
+                matching-strategy: ANT_PATH_MATCHER
+
 search:
      url: https://itunes.apple.com/search?term=%s&entity=musicArtist&limit=5
 lookup:
