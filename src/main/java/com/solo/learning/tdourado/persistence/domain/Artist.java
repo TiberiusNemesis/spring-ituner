@@ -21,4 +21,17 @@ public class Artist {
   private Integer artistId;
   private String artistName;
   private String primaryGenreName;
+
+  /**
+   * Custom constructor to avoid setting the artistUniqueId attribute.
+   *
+   * @param artistId The Artist's iTunes ID.
+   * @param artistName The name of the Artist on the iTunes database.
+   * @param primaryGenreName The primary genre of the artist (according to iTunes).
+   */
+  public Artist(Integer artistId, String artistName, String primaryGenreName) {
+    this.artistId = artistId;
+    this.artistName = artistName;
+    this.primaryGenreName = primaryGenreName;
+  }
 }
