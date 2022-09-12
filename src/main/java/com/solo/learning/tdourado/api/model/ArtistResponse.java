@@ -4,6 +4,7 @@ import com.solo.learning.tdourado.persistence.domain.Artist;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -11,6 +12,7 @@ import lombok.Setter;
  *
  * @author tiberiusdourado
  */
+@NoArgsConstructor
 public class ArtistResponse {
   @Getter @Setter Integer resultCount;
   List<Artist> results;

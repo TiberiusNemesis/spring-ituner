@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Generated;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -15,6 +16,7 @@ import lombok.Setter;
  * @author tiberiusdourado
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
 public class AlbumResponse {
   @Getter @Setter Integer resultCount;
   Artist artist;

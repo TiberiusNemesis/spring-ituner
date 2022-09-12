@@ -72,6 +72,7 @@ public class TunesController {
    */
   private AlbumResponse fetchAlbumsFromItunes(final @NotNull String artistId)
       throws JsonProcessingException, RestClientException {
+    albumResponse = new AlbumResponse();
     // The full lookup URL, constructed by inserting the chosen artist's ID on the iTunes address.
     final String fullLookupUrl = String.format(iTunesLookup, artistId);
     String jsonQueryResult = restTemplate.getForObject(fullLookupUrl, String.class);
@@ -119,6 +120,7 @@ public class TunesController {
    * @throws JsonProcessingException If there are any errors processing the response from iTunes.
    */
   private ArtistResponse fetchArtistsFromItunes(String artistName) throws JsonProcessingException {
+    artistResponse = new ArtistResponse();
     // The complete search URL, constructed by inserting the chosen artist's name on the iTunes
     // address.
     String fullSearchUrl = String.format(iTunesSearch, artistName);
