@@ -4,14 +4,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solo.learning.tdourado.api.model.AlbumResponse;
 import com.solo.learning.tdourado.api.model.ArtistResponse;
+import com.solo.learning.tdourado.persistence.domain.Album;
 import com.solo.learning.tdourado.persistence.domain.Artist;
+import java.util.List;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -72,7 +78,6 @@ public class TunesController {
    */
   private AlbumResponse fetchAlbumsFromItunes(final @NotNull String artistId)
       throws JsonProcessingException, RestClientException {
-    albumResponse = new AlbumResponse();
     // The full lookup URL, constructed by inserting the chosen artist's ID on the iTunes address.
     final String fullLookupUrl = String.format(iTunesLookup, artistId);
     String jsonQueryResult = restTemplate.getForObject(fullLookupUrl, String.class);
@@ -82,13 +87,17 @@ public class TunesController {
         objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonQueryResult));
 
     // However, the first result of this lookup is an artist.
+    albumResponse = objectMapper.readValue(jsonQueryResult, AlbumResponse.class);
     Artist albumAuthor =
         objectMapper.readValue(
             objectMapper.writeValueAsString(albumResponse.getResults().get(0)), Artist.class);
 
     // Jackson doesn't really handle this, so it needs to be done manually.
     albumResponse.setArtist(albumAuthor);
-    albumResponse.getResults().remove(0);
+    List<Album> artistLessAlbumList = albumResponse.getResults();
+    artistLessAlbumList.remove(0);
+    albumResponse.setResults(artistLessAlbumList);
+
     return albumResponse;
   }
 
@@ -120,7 +129,6 @@ public class TunesController {
    * @throws JsonProcessingException If there are any errors processing the response from iTunes.
    */
   private ArtistResponse fetchArtistsFromItunes(String artistName) throws JsonProcessingException {
-    artistResponse = new ArtistResponse();
     // The complete search URL, constructed by inserting the chosen artist's name on the iTunes
     // address.
     String fullSearchUrl = String.format(iTunesSearch, artistName);
