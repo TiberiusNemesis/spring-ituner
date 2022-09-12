@@ -4,3 +4,183 @@ A Spring Boot web service that consumes from the iTunes Search API.
 
 This project implements two main operations: a *search* operation that takes in a music artist's name and queries it using iTunes' Search API, and an *ID lookup* operation that will return all albums that contain the particular music artist associated with this ID.
 
+Build and package the application (using Maven) through the BASH command:
+
+```bash
+mvn clean package
+```
+
+Then, in the same folder as the generated `.jar` file (defaults to `/target`), run the project with the command:
+
+```bash
+java -jar spring-ituner-1.0.jar
+```
+
+The application will start up, and API endpoints will be made available on `localhost:8080`.
+
+### NAME SEARCH
+
+```
+localhost:8080/artist?term=NAME
+```
+
+"NAME" can be exchanged for any valid musical artist's name. A JSON response will be shown, containing relevant data from iTunes containing 5 artists (maximum) that are considered most relevant to the provided name.
+
+Search examples:
+
+#### *Rob Halford*
+```html
+localhost:8080/artist?term=rob+halford
+```
+
+#### *Julian Casablancas*
+```html
+localhost:8080/artist?term=julian+casablancas
+```
+
+#### *Franz Ferdinand*
+
+```html
+localhost:8080/artist?term=franz+ferdinand
+```
+
+Example search response for `Franz Ferdinand`:
+
+```json
+{
+  "resultCount" : 5,
+  "results" : [ {
+    "artistId" : 6596751,
+    "artistName" : "Franz Ferdinand",
+    "primaryGenreName" : "Alternative"
+  }, {
+    "artistId" : 272805027,
+    "artistName" : "Franz Ferdinand Moser",
+    "primaryGenreName" : "Christmas"
+  }, {
+    "artistId" : 730407693,
+    "artistName" : "Pro Musica Chamber Orchestra Vienna, Ferdinand Grossmann, Franz Gruber, Otto Wiener, Akademie Kammerchor,",
+    "primaryGenreName" : "Classical"
+  }, {
+    "artistId" : 1173825511,
+    "artistName" : "Franz Ferdinand Moser",
+    "primaryGenreName" : "Christmas"
+  }, {
+    "artistId" : 1323994180,
+    "artistName" : "Franz Ferdinand August Rieks",
+    "primaryGenreName" : "Classical"
+  } ]
+}
+```
+
+### ID LOOKUP
+
+```
+localhost:8080/artist/ID/albums
+```
+
+"ID" can be exchanged for any valid iTunes ID for a musical artist. A JSON response containing all the artist's albums will be shown.
+
+Lookup examples:
+
+#### *Daft Punk*
+```html
+localhost:8080/artist/5468295/albums
+```
+
+#### *Aishwarya Rai*
+```html
+localhost:8080/artist/255286914/albums
+```
+
+#### *Billie Eilish*
+
+```html
+localhost:8080/artist/1065981054/albums
+```
+
+Example lookup response for `Billie Eilish`:
+
+```json
+{
+  "resultCount" : 30,
+  "artist" : {
+    "artistId" : 1065981054,
+    "artistName" : "Billie Eilish",
+    "primaryGenreName" : "Alternative"
+  },
+  "results" : [ {
+    "artistId" : 1065981054,
+    "collectionId" : 1450695723,
+    "artistName" : "Billie Eilish",
+    "collectionName" : "WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?",
+    "collectionPrice" : 6.99,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2019 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1440898929,
+    "artistName" : "Billie Eilish",
+    "collectionName" : "dont smile at me",
+    "collectionPrice" : 6.99,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2017 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1564530719,
+    "artistName" : "Billie Eilish",
+    "collectionName" : "Happier Than Ever",
+    "collectionPrice" : 6.99,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2021 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1472563379,
+    "artistName" : "Billie Eilish & Justin Bieber",
+    "collectionName" : "bad guy - Single",
+    "collectionPrice" : 1.29,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2019 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1440894250,
+    "artistName" : "Billie Eilish",
+    "collectionName" : "Ocean Eyes (The Remixes) - EP",
+    "collectionPrice" : 3.99,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2017 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1564530526,
+    "artistName" : "Billie Eilish",
+    "collectionName" : "Happier Than Ever",
+    "collectionPrice" : 6.99,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2021 Darkroom/Interscope Records"
+  }, {
+    "artistId" : 1065981054,
+    "collectionId" : 1549917101,
+    "artistName" : "Billie Eilish & ROSALÍA",
+    "collectionName" : "Lo Vas A Olvidar - Single",
+    "collectionPrice" : 1.29,
+    "currency" : "USD",
+    "primaryGenreName" : "Alternative",
+    "copyright" : "℗ 2021 Darkroom/Interscope Records"
+  }, ...
+```
+
+---
+
+Next steps:
+
+1. Spring Actuator & autogenerated Swagger 
+2. Spring Data JPA    
+3. Dockerfile & push image to Dockerhub
+
+?. UI?

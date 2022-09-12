@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.solo.learning</groupId>
     <artifactId>spring-ituner</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>Spring iTuner</name>
     <description>Spring Boot microservice which consumes from the iTunes API.</description>
     <properties>
