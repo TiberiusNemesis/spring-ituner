@@ -19,6 +19,6 @@ jobs:
         run: mvn --batch-mode --update-snapshots install
 
       - name: Deploy to Pages
-        uses: TiberiusNemesis/github-pages-deploy-action@v4
+        uses: TiberiusNemesis/spring-ituner/github-pages-deploy-action@v4
         with:
           folder: target
