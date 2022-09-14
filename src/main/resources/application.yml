@@ -17,7 +17,18 @@ spring:
     hibernate:
       ddl-auto: update
 
+springdoc:
+  show-actuator: true
+  swagger-ui:
+    path: /swagger.html
+
+
 search:
      url: https://itunes.apple.com/search?term=%s&entity=musicArtist&limit=5
 lookup:
      url: https://itunes.apple.com/lookup?id=%s&entity=album
+
+management:
+  endpoints:
+    web:
+      base-path: /
