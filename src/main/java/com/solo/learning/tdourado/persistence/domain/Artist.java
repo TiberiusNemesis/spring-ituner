@@ -1,8 +1,11 @@
 package com.solo.learning.tdourado.persistence.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import lombok.Generated;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -11,14 +14,13 @@ import lombok.NoArgsConstructor;
  * @author tiberiusdourado
  */
 @JsonIgnoreProperties(value = "artistUniqueId", ignoreUnknown = true)
-// @Entity
-@Data
+@Entity
 @NoArgsConstructor
 public class Artist {
-  // @Id @GeneratedValue private Long artistUniqueId;
-  private Integer artistId;
-  private String artistName;
-  private String primaryGenreName;
+  @Id @GeneratedValue @Getter private Long artistUniqueId;
+  @Getter private Long artistId;
+  @Getter private String artistName;
+  @Getter private String primaryGenreName;
 
   /**
    * Custom constructor to avoid setting the artistUniqueId attribute.
@@ -28,7 +30,7 @@ public class Artist {
    * @param primaryGenreName The primary genre of the artist (according to iTunes).
    */
   @Generated
-  public Artist(Integer artistId, String artistName, String primaryGenreName) {
+  public Artist(Long artistId, String artistName, String primaryGenreName) {
     this.artistId = artistId;
     this.artistName = artistName;
     this.primaryGenreName = primaryGenreName;
