@@ -18,9 +18,12 @@ spring:
       ddl-auto: update
 
 springdoc:
-  show-actuator: true
+  api-docs:
+    path: /api-docs
   swagger-ui:
-    path: /swagger.html
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: true
 
 
 search:

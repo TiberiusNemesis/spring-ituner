@@ -1,7 +1,9 @@
 package com.solo.learning.tdourado.api.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -9,101 +11,227 @@ import com.solo.learning.tdourado.api.model.AlbumResponse;
 import com.solo.learning.tdourado.api.model.ArtistResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
-@SpringBootTest
+/**
+ * Unit tests for TunesController using WebClient.
+ *
+ * <p>These tests mock the WebClient chain to verify controller behavior without making actual HTTP
+ * calls to the iTunes API.
+ */
+@ExtendWith(MockitoExtension.class)
 class TunesControllerTest {
 
-  @Autowired private TunesController tunesController;
-  private RestTemplate mockRestTemplate;
+  private TunesController tunesController;
+  private WebClient.Builder mockWebClientBuilder;
+  private WebClient mockWebClient;
+  private WebClient.RequestHeadersUriSpec mockRequestHeadersUriSpec;
+  private WebClient.RequestHeadersSpec mockRequestHeadersSpec;
+  private WebClient.ResponseSpec mockResponseSpec;
 
   @BeforeEach
   void setUp() {
-    mockRestTemplate = mock(RestTemplate.class);
+    // Create mocks for WebClient chain
+    mockWebClientBuilder = mock(WebClient.Builder.class);
+    mockWebClient = mock(WebClient.class);
+    mockRequestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
+    mockRequestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+    mockResponseSpec = mock(WebClient.ResponseSpec.class);
 
-    tunesController.setRestTemplate(mockRestTemplate);
+    // Configure mock builder
+    when(mockWebClientBuilder.codecs(any())).thenReturn(mockWebClientBuilder);
+    when(mockWebClientBuilder.build()).thenReturn(mockWebClient);
+
+    // Initialize controller with mocked WebClient
+    tunesController = new TunesController(mockWebClientBuilder);
+
+    // Set the URLs using reflection (normally injected by @Value)
+    ReflectionTestUtils.setField(
+        tunesController,
+        "iTunesSearch",
+        "https://itunes.apple.com/search?term=%s&entity=musicArtist&limit=5");
+    ReflectionTestUtils.setField(
+        tunesController, "iTunesLookup", "https://itunes.apple.com/lookup?id=%s&entity=album");
   }
 
   @Test
   void
       fetchAlbumsByArtistIdTest_whenValidArtistId_shouldReturnValidResponseEntityContainingOkStatus() {
-    when(mockRestTemplate.getForObject(anyString(), eq(String.class)))
-        .thenReturn(
-            "\n"
-                + "\n"
-                + "\n"
-                + "{\n"
-                + " \"resultCount\":21,\n"
-                + " \"results\": [\n"
-                + "{\"wrapperType\":\"artist\", \"artistType\":\"Movie Artist\", \"artistName\":\"Aishwarya Rai Bachchan\", \"artistLinkUrl\":\"https://itunes.apple.com/us/artist/aishwarya-rai-bachchan/255286914?uo=4\", \"artistId\":255286914, \"primaryGenreName\":\"Bollywood\", \"primaryGenreId\":4431}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":3249567, \"collectionId\":1537961309, \"amgArtistId\":278580, \"artistName\":\"A.R. Rahman\", \"collectionName\":\"Jodhaa Akbar (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Jodhaa Akbar (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/a-r-rahman/3249567?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/jodhaa-akbar-original-motion-picture-soundtrack/1537961309?uo=4\", \"artworkUrl60\":\"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/2e/76/b5/2e76b58a-bc9f-89ad-a145-2da4683919de/886448872016.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/2e/76/b5/2e76b58a-bc9f-89ad-a145-2da4683919de/886448872016.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":7, \"copyright\":\"℗ 2007 Sony Music Entertainment India Pvt. Ltd. Under License From UTV\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2007-12-31T08:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":28753590, \"collectionId\":1120780912, \"artistName\":\"Ismail Darbar\", \"collectionName\":\"Hum Dil De Chuke Sanam (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Hum Dil De Chuke Sanam (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/ismail-darbar/28753590?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/hum-dil-de-chuke-sanam-original-motion-picture-soundtrack/1120780912?uo=4\", \"artworkUrl60\":\"https://is3-ssl.mzstatic.com/image/thumb/Music60/v4/33/15/df/3315dfba-4511-56c7-c949-5d5564ddfedc/8902894112963_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is3-ssl.mzstatic.com/image/thumb/Music60/v4/33/15/df/3315dfba-4511-56c7-c949-5d5564ddfedc/8902894112963_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":11, \"copyright\":\"℗ 1999 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"1999-04-30T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":213157068, \"collectionId\":1123075093, \"amgArtistId\":1018966, \"artistName\":\"Pritam\", \"collectionName\":\"Action Replayy (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Action Replayy (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/pritam/213157068?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/action-replayy-original-motion-picture-soundtrack/1123075093?uo=4\", \"artworkUrl60\":\"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/33/c6/b7/33c6b7a6-b4a0-8d2d-a354-a840d12a0e04/8902894689656_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/33/c6/b7/33c6b7a6-b4a0-8d2d-a354-a840d12a0e04/8902894689656_cover.jpg/100x100bb.jpg\", \"collectionPrice\":9.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":13, \"copyright\":\"℗ 2010 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2010-10-07T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":3249567, \"collectionId\":1129369150, \"amgArtistId\":278580, \"artistName\":\"A.R. Rahman\", \"collectionName\":\"Raavan (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Raavan (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/a-r-rahman/3249567?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/raavan-original-motion-picture-soundtrack/1129369150?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music125/v4/07/24/8b/07248b8e-455a-1391-9abe-461fb630d52e/8902894687249_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music125/v4/07/24/8b/07248b8e-455a-1391-9abe-461fb630d52e/8902894687249_cover.jpg/100x100bb.jpg\", \"collectionPrice\":5.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":6, \"copyright\":\"℗ 2010 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2010-04-24T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":19705392, \"collectionId\":1136461707, \"amgArtistId\":794733, \"artistName\":\"Anu Malik\", \"collectionName\":\"Umrao Jaan (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Umrao Jaan (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/anu-malik/19705392?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/umrao-jaan-original-motion-picture-soundtrack/1136461707?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/a5/e6/2e/a5e62e49-5a15-600c-4238-533997893a2d/8902894601924_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/a5/e6/2e/a5e62e49-5a15-600c-4238-533997893a2d/8902894601924_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":10, \"copyright\":\"℗ 2006 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2006-10-04T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":1115858174, \"collectionId\":1138940151, \"artistName\":\"Jatin-Lalit\", \"collectionName\":\"Dhaai Akshar Prem Ke (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Dhaai Akshar Prem Ke (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/jatin-lalit/1115858174?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/dhaai-akshar-prem-ke-original-motion-picture-soundtrack/1138940151?uo=4\", \"artworkUrl60\":\"https://is2-ssl.mzstatic.com/image/thumb/Music20/v4/8d/1d/e8/8d1de8cd-fc45-bed0-bb55-b6c173a37968/8902894114523_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is2-ssl.mzstatic.com/image/thumb/Music20/v4/8d/1d/e8/8d1de8cd-fc45-bed0-bb55-b6c173a37968/8902894114523_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":11, \"copyright\":\"℗ 2000 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2000-08-11T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":1086921576, \"collectionId\":1414151235, \"amgArtistId\":3570791, \"artistName\":\"Tanishk Bagchi & Amit Trivedi\", \"collectionName\":\"Fanney Khan (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Fanney Khan (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/tanishk-bagchi/1086921576?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/fanney-khan-original-motion-picture-soundtrack/1414151235?uo=4\", \"artworkUrl60\":\"https://is3-ssl.mzstatic.com/image/thumb/Music118/v4/53/49/8f/53498f53-a16b-a5d5-ff2e-09a01b940061/8902894360340_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is3-ssl.mzstatic.com/image/thumb/Music118/v4/53/49/8f/53498f53-a16b-a5d5-ff2e-09a01b940061/8902894360340_cover.jpg/100x100bb.jpg\", \"collectionPrice\":4.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":5, \"copyright\":\"℗ 2018 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2018-07-19T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":916733558, \"collectionId\":1157930350, \"artistName\":\"Amaal Mallik, Jeet Gannguli, Shail-Pritesh, Tanishk Bagchi & Shashi-Shivamm\", \"collectionName\":\"Sarbjit (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Sarbjit (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/amaal-mallik/916733558?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/sarbjit-original-motion-picture-soundtrack/1157930350?uo=4\", \"artworkUrl60\":\"https://is1-ssl.mzstatic.com/image/thumb/Music71/v4/8f/8c/00/8f8c0011-0f79-debe-30bd-50078161f97c/8902894358088_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is1-ssl.mzstatic.com/image/thumb/Music71/v4/8f/8c/00/8f8c0011-0f79-debe-30bd-50078161f97c/8902894358088_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":10, \"copyright\":\"℗ 2016 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2016-05-10T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":3249567, \"collectionId\":1545576466, \"amgArtistId\":278580, \"artistName\":\"A.R. Rahman\", \"collectionName\":\"Jodhaa Akbar (Telugu) [Original Motion Picture Soundtrack]\", \"collectionCensoredName\":\"Jodhaa Akbar (Telugu) [Original Motion Picture Soundtrack]\", \"artistViewUrl\":\"https://music.apple.com/us/artist/a-r-rahman/3249567?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/jodhaa-akbar-telugu-original-motion-picture-soundtrack/1545576466?uo=4\", \"artworkUrl60\":\"https://is2-ssl.mzstatic.com/image/thumb/Music124/v4/1f/11/09/1f110976-6411-00b1-59d9-4b5744bd13fe/886449002238.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is2-ssl.mzstatic.com/image/thumb/Music124/v4/1f/11/09/1f110976-6411-00b1-59d9-4b5744bd13fe/886449002238.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":7, \"copyright\":\"℗ 2007 Sony Music Entertainment India Pvt. Ltd. Under License From UTV\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2007-12-31T08:00:00Z\", \"primaryGenreName\":\"Telugu\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":189711536, \"collectionId\":1139406315, \"amgArtistId\":2293191, \"artistName\":\"Vishal & Shekhar\", \"collectionName\":\"Shabd (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Shabd (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/vishal-shekhar/189711536?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/shabd-original-motion-picture-soundtrack/1139406315?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/18/30/04/183004b3-2117-e0ed-d1b0-1de558306ad5/8902894118750_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/18/30/04/183004b3-2117-e0ed-d1b0-1de558306ad5/8902894118750_cover.jpg/100x100bb.jpg\", \"collectionPrice\":5.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":9, \"copyright\":\"℗ 2004 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2004-12-11T08:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":213157068, \"collectionId\":673573136, \"amgArtistId\":1018966, \"artistName\":\"Pritam & Abhishek Bachchan\", \"collectionName\":\"Dhoom:2 (Tamil) [Original Motion Picture Soundtrack]\", \"collectionCensoredName\":\"Dhoom:2 (Tamil) [Original Motion Picture Soundtrack]\", \"artistViewUrl\":\"https://music.apple.com/us/artist/pritam/213157068?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/dhoom-2-tamil-original-motion-picture-soundtrack/673573136?uo=4\", \"artworkUrl60\":\"https://is2-ssl.mzstatic.com/image/thumb/Music/v4/e9/b0/ba/e9b0bad7-0da9-bb80-e6e5-9d53e3385629/Dhoom_Tamil.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is2-ssl.mzstatic.com/image/thumb/Music/v4/e9/b0/ba/e9b0bad7-0da9-bb80-e6e5-9d53e3385629/Dhoom_Tamil.jpg/100x100bb.jpg\", \"collectionPrice\":5.94, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":6, \"copyright\":\"℗ 2006 YRF Music\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2006-11-10T08:00:00Z\", \"primaryGenreName\":\"Tamil\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":275078203, \"collectionId\":1139227657, \"artistName\":\"Ram Sampath\", \"collectionName\":\"Khakee (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Khakee (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/ram-sampath/275078203?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/khakee-original-motion-picture-soundtrack/1139227657?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music124/v4/78/ae/f7/78aef78b-9372-5f6f-7c74-9de4c49c8c66/8902894116817_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music124/v4/78/ae/f7/78aef78b-9372-5f6f-7c74-9de4c49c8c66/8902894116817_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":10, \"copyright\":\"℗ 2003 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2003-10-17T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":465998, \"collectionId\":1364384104, \"amgArtistId\":3314, \"artistName\":\"Nusrat Fateh Ali Khan\", \"collectionName\":\"Aur Pyar Ho Gaya (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Aur Pyar Ho Gaya (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/nusrat-fateh-ali-khan/465998?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/aur-pyar-ho-gaya-original-motion-picture-soundtrack/1364384104?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music118/v4/4b/a2/98/4ba298ad-ebee-c38e-bc4b-2bb8dfc78859/192562328132.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music118/v4/4b/a2/98/4ba298ad-ebee-c38e-bc4b-2bb8dfc78859/192562328132.jpg/100x100bb.jpg\", \"collectionPrice\":9.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":10, \"copyright\":\"℗ 2018 Saregama India Ltd.\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"1997-12-30T08:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":266194059, \"collectionId\":1071229938, \"artistName\":\"Sanjay Leela Bhansali\", \"collectionName\":\"Guzaarish (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Guzaarish (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/sanjay-leela-bhansali/266194059?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/guzaarish-original-motion-picture-soundtrack/1071229938?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music18/v4/8c/8d/2d/8c8d2d03-27a1-8756-98e5-77c4849cb9c7/dj.tzrwxgyi.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music18/v4/8c/8d/2d/8c8d2d03-27a1-8756-98e5-77c4849cb9c7/dj.tzrwxgyi.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":11, \"copyright\":\"℗ 2010 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2010-10-16T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":255286914, \"collectionId\":1124010170, \"artistName\":\"Various Artists & Aishwarya Rai Bachchan\", \"collectionName\":\"Aishwarya Rai Queen of Bollywood\", \"collectionCensoredName\":\"Aishwarya Rai Queen of Bollywood\", \"artistViewUrl\":\"https://itunes.apple.com/us/artist/aishwarya-rai-bachchan/255286914?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/aishwarya-rai-queen-of-bollywood/1124010170?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music20/v4/5d/6b/be/5d6bbeb6-0897-9968-1193-3cdcbadf7bd7/cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music20/v4/5d/6b/be/5d6bbeb6-0897-9968-1193-3cdcbadf7bd7/cover.jpg/100x100bb.jpg\", \"collectionPrice\":10.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":11, \"copyright\":\"℗ 2016 Ishtar Music Pvt. Ltd.\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2016-04-25T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":213157068, \"collectionId\":673573954, \"amgArtistId\":1018966, \"artistName\":\"Pritam & Abhishek Bachchan\", \"collectionName\":\"Dhoom:2 (Telugu) [Original Motion Picture Soundtrack]\", \"collectionCensoredName\":\"Dhoom:2 (Telugu) [Original Motion Picture Soundtrack]\", \"artistViewUrl\":\"https://music.apple.com/us/artist/pritam/213157068?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/dhoom-2-telugu-original-motion-picture-soundtrack/673573954?uo=4\", \"artworkUrl60\":\"https://is2-ssl.mzstatic.com/image/thumb/Music4/v4/b9/bb/15/b9bb15cc-835d-e332-8651-dd268dc53166/Dhoom_Telugu.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is2-ssl.mzstatic.com/image/thumb/Music4/v4/b9/bb/15/b9bb15cc-835d-e332-8651-dd268dc53166/Dhoom_Telugu.jpg/100x100bb.jpg\", \"collectionPrice\":5.94, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":6, \"copyright\":\"℗ 2006 YRF Music\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2006-11-10T08:00:00Z\", \"primaryGenreName\":\"Telugu\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":19705392, \"collectionId\":1140536685, \"amgArtistId\":794733, \"artistName\":\"Anu Malik\", \"collectionName\":\"Hum Kisise Kam Nahin (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Hum Kisise Kam Nahin (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/anu-malik/19705392?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/hum-kisise-kam-nahin-original-motion-picture-soundtrack/1140536685?uo=4\", \"artworkUrl60\":\"https://is2-ssl.mzstatic.com/image/thumb/Music18/v4/29/3d/57/293d5787-d27c-3c9d-831b-5c1997b6794e/8902894608343_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is2-ssl.mzstatic.com/image/thumb/Music18/v4/29/3d/57/293d5787-d27c-3c9d-831b-5c1997b6794e/8902894608343_cover.jpg/100x100bb.jpg\", \"collectionPrice\":5.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":8, \"copyright\":\"℗ 2002 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2002-03-02T08:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":3249567, \"collectionId\":1545573043, \"amgArtistId\":278580, \"artistName\":\"A.R. Rahman\", \"collectionName\":\"Jodhaa Akbar (Tamil) [Original Motion Picture Soundtrack]\", \"collectionCensoredName\":\"Jodhaa Akbar (Tamil) [Original Motion Picture Soundtrack]\", \"artistViewUrl\":\"https://music.apple.com/us/artist/a-r-rahman/3249567?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/jodhaa-akbar-tamil-original-motion-picture-soundtrack/1545573043?uo=4\", \"artworkUrl60\":\"https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/4d/e8/69/4de86970-c681-7cd6-854f-0a1ba154263d/886448999737.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/4d/e8/69/4de86970-c681-7cd6-854f-0a1ba154263d/886448999737.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":7, \"copyright\":\"℗ 2007 Sony Music Entertainment India Pvt. Ltd. Under License From UTV\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2007-12-31T08:00:00Z\", \"primaryGenreName\":\"Tamil\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":1116253442, \"collectionId\":1116253436, \"artistName\":\"Bapi-Tutul\", \"collectionName\":\"Sarkar Raj (Original Motion Picture Soundtrack)\", \"collectionCensoredName\":\"Sarkar Raj (Original Motion Picture Soundtrack)\", \"artistViewUrl\":\"https://music.apple.com/us/artist/bapi-tutul/1116253442?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/sarkar-raj-original-motion-picture-soundtrack/1116253436?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/43/aa/0a/43aa0a97-f2ce-644f-4c5f-d92b0d1f09da/8902894626361_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music30/v4/43/aa/0a/43aa0a97-f2ce-644f-4c5f-d92b0d1f09da/8902894626361_cover.jpg/100x100bb.jpg\", \"collectionPrice\":7.99, \"collectionExplicitness\":\"notExplicit\", \"trackCount\":12, \"copyright\":\"℗ 2008 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2008-06-02T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}, \n"
-                + "{\"wrapperType\":\"collection\", \"collectionType\":\"Album\", \"artistId\":14291650, \"collectionId\":1410643086, \"amgArtistId\":793876, \"artistName\":\"Sunidhi Chauhan & Tanishk Bagchi\", \"collectionName\":\"Mohabbat (From \\\"Fanney Khan\\\") - Single\", \"collectionCensoredName\":\"Mohabbat (From \\\"Fanney Khan\\\") - Single\", \"artistViewUrl\":\"https://music.apple.com/us/artist/sunidhi-chauhan/14291650?uo=4\", \"collectionViewUrl\":\"https://music.apple.com/us/album/mohabbat-from-fanney-khan-single/1410643086?uo=4\", \"artworkUrl60\":\"https://is5-ssl.mzstatic.com/image/thumb/Music115/v4/af/4c/10/af4c1077-4ab6-c7e3-a8da-62dc5c4033db/8903431680525_cover.jpg/60x60bb.jpg\", \"artworkUrl100\":\"https://is5-ssl.mzstatic.com/image/thumb/Music115/v4/af/4c/10/af4c1077-4ab6-c7e3-a8da-62dc5c4033db/8903431680525_cover.jpg/100x100bb.jpg\", \"collectionExplicitness\":\"notExplicit\", \"trackCount\":1, \"copyright\":\"℗ 2018 Super Cassettes Industries Private Limited\", \"country\":\"USA\", \"currency\":\"USD\", \"releaseDate\":\"2018-07-11T07:00:00Z\", \"primaryGenreName\":\"Bollywood\"}]\n"
-                + "}\n"
-                + "\n"); // This is the actual JSON result from querying this artist in iTunes.
-    ResponseEntity<AlbumResponse> response =
-        tunesController.fetchAlbumsByArtistId("255286914"); // (This is Aishwarya Rai.)
-    assertEquals(200, response.getStatusCodeValue()); // Should be 200, i.e. OK.
+    String validJsonResponse =
+        """
+                {
+                 "resultCount":21,
+                 "results": [
+                {"wrapperType":"artist", "artistType":"Movie Artist", "artistName":"Aishwarya Rai Bachchan", "artistLinkUrl":"https://itunes.apple.com/us/artist/aishwarya-rai-bachchan/255286914?uo=4", "artistId":255286914, "primaryGenreName":"Bollywood", "primaryGenreId":4431},
+                {"wrapperType":"collection", "collectionType":"Album", "artistId":3249567, "collectionId":1537961309, "amgArtistId":278580, "artistName":"A.R. Rahman", "collectionName":"Jodhaa Akbar (Original Motion Picture Soundtrack)", "collectionCensoredName":"Jodhaa Akbar (Original Motion Picture Soundtrack)", "artistViewUrl":"https://music.apple.com/us/artist/a-r-rahman/3249567?uo=4", "collectionViewUrl":"https://music.apple.com/us/album/jodhaa-akbar-original-motion-picture-soundtrack/1537961309?uo=4", "artworkUrl60":"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/2e/76/b5/2e76b58a-bc9f-89ad-a145-2da4683919de/886448872016.jpg/60x60bb.jpg", "artworkUrl100":"https://is3-ssl.mzstatic.com/image/thumb/Music124/v4/2e/76/b5/2e76b58a-bc9f-89ad-a145-2da4683919de/886448872016.jpg/100x100bb.jpg", "collectionPrice":7.99, "collectionExplicitness":"notExplicit", "trackCount":7, "copyright":"℗ 2007 Sony Music Entertainment India Pvt. Ltd. Under License From UTV", "country":"USA", "currency":"USD", "releaseDate":"2007-12-31T08:00:00Z", "primaryGenreName":"Bollywood"}]
+                }
+                """;
+
+    // Configure mock chain for WebClient
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class)).thenReturn(Mono.just(validJsonResponse));
+
+    ResponseEntity<AlbumResponse> response = tunesController.fetchAlbumsByArtistId("255286914");
+
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCode().value());
+    assertNotNull(response.getBody());
     assertEquals("Aishwarya Rai Bachchan", response.getBody().getArtist().getArtistName());
+    assertEquals(1, response.getBody().getResults().size()); // Artist removed from results
   }
 
   @Test
   void
       fetchAlbumsByArtistIdTest_whenInvalidArtistId_shouldReturnValidResponseEntityContainingBadRequestStatus() {
-    when(mockRestTemplate.getForObject(anyString(), eq(String.class)))
-        .thenThrow(RestClientException.class);
-    ResponseEntity badRequestEntity = tunesController.fetchAlbumsByArtistId("1831534");
-    assertEquals(400, badRequestEntity.getStatusCodeValue()); // Should be 400, i.e. BAD REQUEST.
+    // Configure mock to throw WebClientResponseException
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class))
+        .thenReturn(
+            Mono.error(WebClientResponseException.create(404, "Not Found", null, null, null)));
+
+    ResponseEntity<AlbumResponse> badRequestEntity =
+        tunesController.fetchAlbumsByArtistId("1831534");
+
+    assertNotNull(badRequestEntity);
+    assertEquals(400, badRequestEntity.getStatusCode().value());
   }
 
   @Test
   void
       fetchArtistsByNameTest_whenValidArtistName_shouldReturnValidResponseEntityContainingOkStatus() {
-    when(mockRestTemplate.getForObject(anyString(), eq(String.class)))
-        .thenReturn(
-            "\n"
-                + "\n"
-                + "\n"
-                + "{\n"
-                + " \"resultCount\":3,\n"
-                + " \"results\": [\n"
-                + "{\"wrapperType\":\"artist\", \"artistType\":\"Artist\", \"artistName\":\"Daft Punk\", \"artistLinkUrl\":\"https://music.apple.com/us/artist/daft-punk/5468295?uo=4\", \"artistId\":5468295, \"amgArtistId\":168791, \"primaryGenreName\":\"Dance\", \"primaryGenreId\":17}, \n"
-                + "{\"wrapperType\":\"artist\", \"artistType\":\"Artist\", \"artistName\":\"Daft Punk is Dead\", \"artistLinkUrl\":\"https://music.apple.com/us/artist/daft-punk-is-dead/1566602984?uo=4\", \"artistId\":1566602984, \"primaryGenreName\":\"House\", \"primaryGenreId\":1048}, \n"
-                + "{\"wrapperType\":\"artist\", \"artistType\":\"Artist\", \"artistName\":\"Daft Punk Experience\", \"artistLinkUrl\":\"https://music.apple.com/us/artist/daft-punk-experience/1633597459?uo=4\", \"artistId\":1633597459, \"primaryGenreName\":\"Electronic\", \"primaryGenreId\":7}]\n"
-                + "}\n"
-                + "\n");
+    String validJsonResponse =
+        """
+                {
+                 "resultCount":3,
+                 "results": [
+                {"wrapperType":"artist", "artistType":"Artist", "artistName":"Daft Punk", "artistLinkUrl":"https://music.apple.com/us/artist/daft-punk/5468295?uo=4", "artistId":5468295, "amgArtistId":168791, "primaryGenreName":"Dance", "primaryGenreId":17},
+                {"wrapperType":"artist", "artistType":"Artist", "artistName":"Daft Punk is Dead", "artistLinkUrl":"https://music.apple.com/us/artist/daft-punk-is-dead/1566602984?uo=4", "artistId":1566602984, "primaryGenreName":"House", "primaryGenreId":1048},
+                {"wrapperType":"artist", "artistType":"Artist", "artistName":"Daft Punk Experience", "artistLinkUrl":"https://music.apple.com/us/artist/daft-punk-experience/1633597459?uo=4", "artistId":1633597459, "primaryGenreName":"Electronic", "primaryGenreId":7}]
+                }
+                """;
+
+    // Configure mock chain for WebClient
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class)).thenReturn(Mono.just(validJsonResponse));
+
     ResponseEntity<ArtistResponse> response = tunesController.fetchArtistsByName("Daft Punk");
-    assertEquals(200, response.getStatusCodeValue()); // Should be 200, i.e. OK.
+
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCode().value());
+    assertNotNull(response.getBody());
     assertEquals("Daft Punk", response.getBody().getResults().get(0).getArtistName());
+    assertEquals(3, response.getBody().getResults().size());
   }
 
   @Test
   void
       fetchArtistsByNameTest_whenInvalidArtistName_shouldReturnValidResponseEntityContainingBadRequestStatus() {
-    when(mockRestTemplate.getForObject(anyString(), eq(String.class)))
-        .thenThrow(RestClientException.class);
-    ResponseEntity badRequestEntity = tunesController.fetchArtistsByName("waaahhhhhhhhhhhhhhhhhh");
-    assertEquals(400, badRequestEntity.getStatusCodeValue()); // Should be 400, i.e. BAD REQUEST.
+    // Configure mock to throw WebClientResponseException
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class))
+        .thenReturn(
+            Mono.error(
+                WebClientResponseException.create(400, "Bad Request", null, null, null)));
+
+    ResponseEntity<ArtistResponse> badRequestEntity =
+        tunesController.fetchArtistsByName("waaahhhhhhhhhhhhhhhhhh");
+
+    assertNotNull(badRequestEntity);
+    assertEquals(400, badRequestEntity.getStatusCode().value());
+  }
+
+  @Test
+  void
+      fetchAlbumsByArtistIdTest_whenEmptyResults_shouldReturnOkStatusWithEmptyAlbumList() {
+    String emptyResultsJson =
+        """
+                {
+                 "resultCount":0,
+                 "results": []
+                }
+                """;
+
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class)).thenReturn(Mono.just(emptyResultsJson));
+
+    ResponseEntity<AlbumResponse> response = tunesController.fetchAlbumsByArtistId("999999999");
+
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCode().value());
+    assertNotNull(response.getBody());
+  }
+
+  @Test
+  void fetchArtistsByNameTest_whenJsonProcessingError_shouldReturnBadRequest() {
+    String invalidJson = "{ invalid json }";
+
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class)).thenReturn(Mono.just(invalidJson));
+
+    ResponseEntity<ArtistResponse> response = tunesController.fetchArtistsByName("test");
+
+    assertNotNull(response);
+    assertEquals(400, response.getStatusCode().value());
+  }
+
+  @Test
+  void fetchAlbumsByArtistIdTest_whenUnexpectedException_shouldReturnInternalServerError() {
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class))
+        .thenReturn(Mono.error(new RuntimeException("Unexpected error")));
+
+    ResponseEntity<AlbumResponse> response = tunesController.fetchAlbumsByArtistId("123");
+
+    assertNotNull(response);
+    assertEquals(500, response.getStatusCode().value());
+  }
+
+  @Test
+  void fetchArtistsByNameTest_whenUnexpectedException_shouldReturnInternalServerError() {
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class))
+        .thenReturn(Mono.error(new NullPointerException("Unexpected null")));
+
+    ResponseEntity<ArtistResponse> response = tunesController.fetchArtistsByName("artist");
+
+    assertNotNull(response);
+    assertEquals(500, response.getStatusCode().value());
+  }
+
+  @Test
+  void fetchAlbumsByArtistIdTest_whenJsonProcessingError_shouldReturnBadRequest() {
+    String invalidAlbumJson = "{ bad: json }";
+
+    when(mockWebClient.get()).thenReturn(mockRequestHeadersUriSpec);
+    when(mockRequestHeadersUriSpec.uri(anyString())).thenReturn(mockRequestHeadersSpec);
+    when(mockRequestHeadersSpec.retrieve()).thenReturn(mockResponseSpec);
+    when(mockResponseSpec.bodyToMono(String.class)).thenReturn(Mono.just(invalidAlbumJson));
+
+    ResponseEntity<AlbumResponse> response = tunesController.fetchAlbumsByArtistId("123");
+
+    assertNotNull(response);
+    assertEquals(400, response.getStatusCode().value());
   }
 }
